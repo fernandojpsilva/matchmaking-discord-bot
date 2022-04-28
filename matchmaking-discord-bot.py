@@ -1,8 +1,21 @@
 import discord
+import cassiopeia as cass
 
-TOKEN = 'OTY5MzM4NDQyODIxNTY2NTE0.Ymr8xg.NOe1KlLfcdoCZfQBACBHYvCsUjE'
+TOKEN = ''
+cass.set_riot_api_key('')
 
 client = discord.Client()
+
+
+def getSummonerRank(name):
+    rank = cass.get_summoner(name=name, region="EUW").league_entries.fives
+    return rank
+
+
+def getSummoner(name):
+    summoner = cass.get_summoner(name=name, region="EUW")
+    return summoner
+
 
 @client.event
 async def on_ready():
@@ -20,19 +33,13 @@ async def on_message(message):
         return
 
     if message.channel.name == 'testing':
-        if user_message.lower() == 'hello':
-            await message.channel.send(f'Hello {username}')
-            return
-        elif user_message.lower() == 'bye':
-            await message.channel.send(f'See you later {username}')
-            return
-        elif user_message.lower() == '!random':
-            response = f'Random'
-            await message.channel.send(response)
+        if user_message.lower().startswith("!lol"):
+            name = user_message.split(" ")[1]
+            summoner = getSummoner(name)
+            summoner_rank = getSummonerRank(name)
+            await message.channel.send(f'{summoner.name} - Nível {summoner.level} - {summoner_rank.league.tier}'
+                                       f' {summoner_rank.division} ({summoner_rank.league_points} LP)')
             return
 
-    if user_message.lower() == "!anywhere":
-        await message.channel.send("Anywhere")
-        return
 
 client.run(TOKEN)
