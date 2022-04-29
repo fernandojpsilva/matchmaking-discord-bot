@@ -7,9 +7,37 @@ cass.set_riot_api_key('')
 client = discord.Client()
 
 
+def getSummonerString(user_message):
+    # Split game from summoner name, strip summoner name for
+    # names with multiple words
+    split_message = user_message.split(" ", 1)
+    name = split_message[1].strip()
+
+    summoner = getSummoner(name)
+    summoner_rank = getSummonerRank(name)
+
+    if summoner_rank is not False:
+        summoner_string = f'{summoner.name} - Nível {summoner.level} - {summoner_rank.league.tier} ' \
+                          f'{summoner_rank.division} ({summoner_rank.league_points} LP)'
+        return summoner_string
+    else:
+        summoner_string = f'{summoner.name} - Nível {summoner.level} - Unranked'
+        return summoner_string
+
+
+def isLolSummonerRequest(msg):
+    if msg.startswith("!lol "):
+        return True
+    else:
+        return False
+
+
 def getSummonerRank(name):
-    rank = cass.get_summoner(name=name, region="EUW").league_entries.fives
-    return rank
+    try:
+        rank = cass.get_summoner(name=name, region="EUW").league_entries.fives
+        return rank
+    except Exception as err:
+        return False
 
 
 def getSummoner(name):
@@ -25,7 +53,7 @@ async def on_ready():
 @client.event
 async def on_message(message):
     username = str(message.author).split('#')[0]
-    user_message = str(message.content)
+    user_message = str(message.content).lower()
     channel = str(message.channel.name)
     print(f'{username}: {user_message} ({channel})')
 
@@ -33,12 +61,8 @@ async def on_message(message):
         return
 
     if message.channel.name == 'testing':
-        if user_message.lower().startswith("!lol"):
-            name = user_message.split(" ")[1]
-            summoner = getSummoner(name)
-            summoner_rank = getSummonerRank(name)
-            await message.channel.send(f'{summoner.name} - Nível {summoner.level} - {summoner_rank.league.tier}'
-                                       f' {summoner_rank.division} ({summoner_rank.league_points} LP)')
+        if isLolSummonerRequest(user_message):
+            await message.channel.send(getSummonerString(user_message))
             return
 
 
