@@ -12,16 +12,21 @@ def getSummonerString(user_message):
     # names with multiple words
     split_message = user_message.split(" ", 1)
     name = split_message[1].strip()
-
     summoner = getSummoner(name)
     summoner_rank = getSummonerRank(name)
 
-    if summoner_rank is not False:
-        summoner_string = f'{summoner.name} - Nível {summoner.level} - {summoner_rank.league.tier} ' \
-                          f'{summoner_rank.division} ({summoner_rank.league_points} LP)'
-        return summoner_string
+    if summoner is not False:
+        print(summoner)
+        if summoner_rank is not False:
+            summoner_string = f'{summoner.name} - Nível {summoner.level} - {summoner_rank.league.tier} ' \
+                              f'{summoner_rank.division} ({summoner_rank.league_points} LP)'
+            return summoner_string
+        else:
+            summoner_string = f'{summoner.name} - Nível {summoner.level} - Unranked'
+            return summoner_string
     else:
-        summoner_string = f'{summoner.name} - Nível {summoner.level} - Unranked'
+        print("tou aqui")
+        summoner_string = 'Quem? :banana:'
         return summoner_string
 
 
@@ -41,8 +46,15 @@ def getSummonerRank(name):
 
 
 def getSummoner(name):
-    summoner = cass.get_summoner(name=name, region="EUW")
-    return summoner
+    # Returns summoner if exists, or false otherwise
+    try:
+        summoner = cass.get_summoner(name=name, region="EUW")
+        if summoner.id:
+            return summoner
+        else:
+            return False
+    except Exception as err:
+        return False
 
 
 @client.event
