@@ -28,8 +28,14 @@ def getRedTeam(match):
         summoner_name = item.summoner.name
         champion = item.champion.name
         rank = getSummonerRank(summoner_name)
-        wr = str(round(rank.wins / (rank.wins + rank.losses) * 100, 2))
-        red_summoners_list.append([summoner_name, rank.league.tier, rank.division, rank.league_points, wr, champion])
+        wr = 0
+        if rank is not None:
+            wr = str(round(rank.wins / (rank.wins + rank.losses) * 100, 2))
+            red_summoners_list.append(
+                [summoner_name, rank.league.tier, rank.division, rank.league_points, wr, champion])
+        else:
+            red_summoners_list.append(
+                [summoner_name, "Unranked", "", "", "-", champion])
 
     return red_summoners_list
 
@@ -71,7 +77,7 @@ def generateSummonerString(summoner_name):
     summoner_rank = getSummonerRank(summoner_name)
 
     if summoner is not False:
-        if summoner_rank != "Unranked":
+        if summoner_rank is not None:
             wr = str(round(summoner_rank.wins/(summoner_rank.wins+summoner_rank.losses)*100, 2))
             played = summoner_rank.wins+summoner_rank.losses
             embed = discord.Embed(title=f'{summoner.name} - Nível {summoner.level}',
@@ -98,6 +104,8 @@ def requestType(msg):
         return 'lol_summoner'
     elif msg.startswith('!lolgame'):
         return 'lolgame'
+    elif msg.startswith('!help'):
+        return 'help'
     else:
         return False
 
@@ -115,8 +123,7 @@ def getSummonerRank(name):
         rank = cass.get_summoner(name=name, region='EUW').league_entries.fives
         return rank
     except Exception as err:
-        unranked = "Unranked"
-        return unranked
+        return None
 
 
 def getSummoner(name):
@@ -155,6 +162,10 @@ async def on_message(message):
             await message.channel.send('Ora espera lá um segundinho...')
             summoner_name = extractNameFromMessage(user_message)
             await message.channel.send(generateMatchString(summoner_name))
+            return
+        elif requestType(user_message) == 'help':
+            await message.channel.send('!lol [username] - para veres o teu perfil\n'
+                                       '!lolgame [username] - para ver informação ingame')
             return
 
 client.run(TOKEN)
